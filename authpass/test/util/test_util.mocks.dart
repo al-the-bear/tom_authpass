@@ -34,6 +34,7 @@ import 'package:rxdart/rxdart.dart' as _i8;
 // ignore_for_file: unnecessary_parenthesis
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
+// ignore_for_file: invalid_use_of_internal_member
 
 class _FakeEnv_0 extends _i1.SmartFake implements _i2.Env {
   _FakeEnv_0(Object parent, Invocation parentInvocation)
@@ -213,8 +214,8 @@ class MockKdbxBloc extends _i1.Mock implements _i6.KdbxBloc {
           as _i8.ValueStream<_i6.OpenedKdbxFiles>);
 
   @override
-  set delegate(_i6.KdbxBlocDelegate? _delegate) => super.noSuchMethod(
-    Invocation.setter(#delegate, _delegate),
+  set delegate(_i6.KdbxBlocDelegate? value) => super.noSuchMethod(
+    Invocation.setter(#delegate, value),
     returnValueForMissingStub: null,
   );
 

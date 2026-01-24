@@ -239,8 +239,8 @@ dev_dependencies:
   build_runner: ^2.7.0
 #  builder_static_text: ^0.1.0
   built_value_generator: ^8.3.3
-  analytics_event_gen: ^1.1.1+1
-  freezed: ^3.2.0
+  analytics_event_gen: ^2.0.0-dev.1
+  freezed: ^3.2.4
   plugin_platform_interface: ^2.0.0
   msix: ^3.6.2
   string_literal_finder: ^1.1.0+2

@@ -2,6 +2,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
+import 'dart:io' as io;
 import 'dart:ui' as ui;
 
 import 'package:authpass/bloc/analytics.dart';
@@ -974,7 +975,7 @@ class AttachmentBottomSheet extends StatelessWidget {
             );
             _logger.fine('Opening ${f.path}');
             final result = await OpenFile.open(f.path);
-            _logger.fine('finished opening $result');
+            _logger.fine('finished opening ${result.type}: ${result.message}');
           },
         ),
         ListTile(
@@ -1024,7 +1025,7 @@ class AttachmentBottomSheet extends StatelessWidget {
             Navigator.of(context).pop();
           },
         ),
-        if (AuthPassPlatform.isIOS || AuthPassPlatform.isAndroid)
+        if (!AuthPassPlatform.isWeb)
           ListTile(
             leading: const Icon(Icons.save),
             title: Text(loc.entryAttachmentSaveActionLabel),
@@ -1039,13 +1040,24 @@ class AttachmentBottomSheet extends StatelessWidget {
                 entry.file,
                 attachment.value,
               );
-              await FilePickerWritable().openFileForCreate(
-                fileName: attachment.key.key,
-                writer: (file) async {
-                  _logger.fine('Opening ${file.path}');
-                  await file.writeAsBytes(bytes);
-                },
-              );
+              if (AuthPassPlatform.isIOS || AuthPassPlatform.isAndroid) {
+                await FilePickerWritable().openFileForCreate(
+                  fileName: attachment.key.key,
+                  writer: (file) async {
+                    _logger.fine('Opening ${file.path}');
+                    await file.writeAsBytes(bytes);
+                  },
+                );
+              } else {
+                final saveLocation = await getSaveLocation(
+                  suggestedName: attachment.key.key,
+                  confirmButtonText: loc.saveButtonLabel,
+                );
+                if (saveLocation != null) {
+                  final outputFile = io.File(saveLocation.path);
+                  await outputFile.writeAsBytes(bytes);
+                }
+              }
             },
           ),
         ListTile(

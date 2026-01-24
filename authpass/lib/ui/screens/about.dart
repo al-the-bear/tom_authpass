@@ -6,7 +6,7 @@ import 'package:authpass/utils/constants.dart';
 import 'package:authpass/utils/dialog_utils.dart';
 import 'package:authpass/utils/logging_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -86,8 +86,8 @@ class AuthPassAboutDialog extends StatelessWidget {
                 if (snapshot.hasData) {
                   return MarkdownBody(
                     data: snapshot.requireData,
-                    sizedImageBuilder: (config) {
-                      final icon = _contributorsImageMapping[config.alt];
+                    imageBuilder: (uri, title, alt) {
+                      final icon = _contributorsImageMapping[alt];
                       if (icon != null) {
                         return FaIcon(
                           icon,
@@ -95,7 +95,7 @@ class AuthPassAboutDialog extends StatelessWidget {
                           color: theme.textTheme.bodyLarge!.color,
                         );
                       }
-                      if (config.alt case final alt?) {
+                      if (alt != null) {
                         return Text(alt);
                       }
                       return const SizedBox.shrink(); // Remove images

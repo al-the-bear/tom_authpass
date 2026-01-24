@@ -4,7 +4,7 @@ publish_to: none
 version: 1.9.12+166
 
 environment:
-  sdk: '>=3.9.0 <4.0.0'
+  sdk: '>=3.10.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -67,13 +67,13 @@ dependencies:
 #    git:
 #      url: https://github.com/hpoul/usage.git
 #      ref: custom-user-agent-rebased
-  package_info_plus: ^8.0.0
+  package_info_plus: ^9.0.0
 #  package_info: ^0.4.0+13
 #  package_info_macos:
 #    git:
 #      url: https://github.com/authpass/package_info_macos.git
 ##    path: ../deps/package_info_macos
-  device_info_plus: ^11.5.0
+  device_info_plus: ^12.3.0
   path_provider: ^2.0.1
 #  path_provider_macos: ^0.0.4+4
 #  path_provider_linux: ">=0.0.1 <2.0.0"
@@ -84,7 +84,7 @@ dependencies:
 
   flutter_colorpicker: ^1.1.0
   flutter_speed_dial: ^7.0.0
-  flutter_email_sender: ^7.0.0
+  flutter_email_sender: ^8.0.0
   flutter_store_listing: ^1.1.0
 
   biometric_storage: ^5.1.1-dev.1
@@ -133,7 +133,7 @@ dependencies:
   xml: ">=5.5.0 <7.0.0"
 
   # google drive
-  googleapis: ^14.0.0
+  googleapis: ^15.0.0
   googleapis_auth: ^2.0.0
   google_sign_in: ^7.0.0
   google_sign_in_web: ^1.0.0
@@ -208,7 +208,7 @@ dependencies:
     git:
       url: https://github.com/authpass/winsparkle_flutter.git
       ref: 73224333fa2dfe057a2ad48d2dfb88b56b12c5aa
-  share_plus: ^11.1.0
+  share_plus: ^12.0.0
   collection: ^1.15.0-nullsafety.4
 
   flutter_markdown: ^0.7.1

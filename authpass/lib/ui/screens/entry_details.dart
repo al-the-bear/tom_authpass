@@ -977,54 +977,53 @@ class AttachmentBottomSheet extends StatelessWidget {
             _logger.fine('finished opening $result');
           },
         ),
-        if (AuthPassPlatform.isIOS || AuthPassPlatform.isAndroid)
-          ListTile(
-            leading: const Icon(Icons.share),
-            title: Text(loc.entryAttachmentShareActionLabel),
-            onTap: () async {
-              analytics.events.trackAttachmentAction('share');
-              final kdbxBloc = context.read<KdbxBloc>();
-              final provider = await kdbxBloc.attachmentProviderForFileSource(
-                entry.file,
+        ListTile(
+          leading: const Icon(Icons.share),
+          title: Text(loc.entryAttachmentShareActionLabel),
+          onTap: () async {
+            analytics.events.trackAttachmentAction('share');
+            final kdbxBloc = context.read<KdbxBloc>();
+            final provider = await kdbxBloc.attachmentProviderForFileSource(
+              entry.file,
+            );
+            final bytes = await provider.readAttachmentBytes(
+              entry.file,
+              attachment.value,
+            );
+            final mimeType = lookupMimeType(
+              attachment.key.key,
+              headerBytes: bytes.length > defaultMagicNumbersMaxLength
+                  ? Uint8List.sublistView(
+                      bytes,
+                      0,
+                      defaultMagicNumbersMaxLength,
+                    )
+                  : null,
+            )!;
+            _logger.fine('Opening attachment with mimeType $mimeType');
+
+            final tempDir = await PathUtils().getTemporaryDirectory();
+            final f = await tempDir.childFile(attachment.key.key).create();
+            await f.writeAsBytes(bytes);
+
+            try {
+              await SharePlus.instance.share(
+                ShareParams(
+                  files: [
+                    XFile(f.path, mimeType: mimeType),
+                  ],
+                  subject: loc.entryAttachmentShareSubject,
+                ),
               );
-              final bytes = await provider.readAttachmentBytes(
-                entry.file,
-                attachment.value,
-              );
-              final mimeType = lookupMimeType(
-                attachment.key.key,
-                headerBytes: bytes.length > defaultMagicNumbersMaxLength
-                    ? Uint8List.sublistView(
-                        bytes,
-                        0,
-                        defaultMagicNumbersMaxLength,
-                      )
-                    : null,
-              )!;
-              _logger.fine('Opening attachment with mimeType $mimeType');
+            } finally {
+              unawaited(f.delete());
+            }
 
-              final tempDir = await PathUtils().getTemporaryDirectory();
-              final f = await tempDir.childFile(attachment.key.key).create();
-              await f.writeAsBytes(bytes);
-
-              try {
-                await SharePlus.instance.share(
-                  ShareParams(
-                    files: [
-                      XFile(f.path, mimeType: mimeType),
-                    ],
-                    subject: loc.entryAttachmentShareSubject,
-                  ),
-                );
-              } finally {
-                unawaited(f.delete());
-              }
-
-              // Share.file('Attachment', attachment.key.key,
-              //     attachment.value.value, mimeType);
-              Navigator.of(context).pop();
-            },
-          ),
+            // Share.file('Attachment', attachment.key.key,
+            //     attachment.value.value, mimeType);
+            Navigator.of(context).pop();
+          },
+        ),
         if (AuthPassPlatform.isIOS || AuthPassPlatform.isAndroid)
           ListTile(
             leading: const Icon(Icons.save),

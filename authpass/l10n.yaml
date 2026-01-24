@@ -16,6 +16,5 @@ template-arb-file: app_en.arb
 output-localization-file: app_localizations.dart
 #preferred-supported-locales: '["en"]'
 preferred-supported-locales: ['en']
-synthetic-package: false
 nullable-getter: false
 output-dir: lib/l10n-generated

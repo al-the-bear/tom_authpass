@@ -10,7 +10,7 @@ flavor="$1"
 FLT=${FLT:-}
 AUTHPASS_SKIP_FASTLANE=${AUTHPASS_SKIP_FASTLANE:-}
 
-if test -z "$FLT" && test -f .packages ; then
+if test -z "$FLT" && test -d .dart_tool ; then
     FLT=_tools/flutter_run.sh
 else
     FLT=flutter

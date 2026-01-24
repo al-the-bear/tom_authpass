@@ -134,26 +134,26 @@ class _MainAppTabletScaffoldState extends State<MainAppTabletScaffold> {
                   onEntrySelected: (entry, type) {
                     if (_selectedEntry != entry) {
                       final Future<dynamic> push;
-                      if (type == EntrySelectionType.passiveHighlight) {
-                        push = _navigatorKey.currentState!.pushAndRemoveUntil(
-                          FocusWorkaroundPageRoute<void>(
-                            focusNode: WidgetsBinding
-                                .instance
-                                .focusManager
-                                .primaryFocus,
-                            settings: const RouteSettings(name: '/entry'),
-                            builder: (context) => EntryDetailsScreen(
-                              entry: entry,
-                            ),
-                          ),
-                          (route) => route.isFirst,
-                        );
-                      } else {
-                        push = _navigatorKey.currentState!.pushAndRemoveUntil(
-                          EntryDetailsScreen.route(entry: entry),
-                          (route) => route.isFirst,
-                        );
-                      }
+                      // if (type == EntrySelectionType.passiveHighlight) {
+                      //   push = _navigatorKey.currentState!.pushAndRemoveUntil(
+                      //     FocusWorkaroundPageRoute<void>(
+                      //       focusNode: WidgetsBinding
+                      //           .instance
+                      //           .focusManager
+                      //           .primaryFocus,
+                      //       settings: const RouteSettings(name: '/entry'),
+                      //       builder: (context) => EntryDetailsScreen(
+                      //         entry: entry,
+                      //       ),
+                      //     ),
+                      //     (route) => route.isFirst,
+                      //   );
+                      // } else {
+                      push = _navigatorKey.currentState!.pushAndRemoveUntil(
+                        EntryDetailsScreen.route(entry: entry),
+                        (route) => route.isFirst,
+                      );
+                      // }
                       push.then((dynamic value) {
                         _logger.finer('entry route was popped.');
                         if (entry == _selectedEntry && mounted) {
@@ -173,6 +173,7 @@ class _MainAppTabletScaffoldState extends State<MainAppTabletScaffold> {
         Expanded(
           child: Navigator(
             key: _navigatorKey,
+            requestFocus: false,
             onGenerateRoute: (settings) {
               assert(settings.name == Navigator.defaultRouteName);
               return MaterialPageRoute<void>(

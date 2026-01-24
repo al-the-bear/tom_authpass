@@ -364,7 +364,8 @@ enum BarcodeFormat {
   qrCode(),
   upca(),
   upce(),
-  microQRCode();
+  microQRCode()
+  ;
 
   const BarcodeFormat();
 

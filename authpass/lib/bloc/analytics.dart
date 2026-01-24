@@ -544,7 +544,8 @@ extension ContextEvents on BuildContext {
 enum ErrorSource {
   flutter('errorFlutter'),
   dart('errorDart'),
-  app('errorApp');
+  app('errorApp')
+  ;
 
   const ErrorSource(@NonNls this.eventAction);
   final String eventAction;

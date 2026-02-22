@@ -1,18 +1,14 @@
 import 'package:authpass/bloc/analytics.dart';
 import 'package:authpass/bloc/app_data.dart';
 import 'package:authpass/bloc/kdbx/file_source_cloud_storage.dart';
-import 'package:authpass/cloud_storage/authpasscloud/authpass_cloud_provider.dart';
 import 'package:authpass/cloud_storage/cloud_storage_provider.dart';
 import 'package:authpass/cloud_storage/cloud_storage_ui_auth.dart';
-import 'package:authpass/cloud_storage/cloud_storage_ui_authpass_cloud.dart';
 import 'package:authpass/env/_base.dart';
 import 'package:authpass/l10n-generated/app_localizations.dart';
 import 'package:authpass/ui/screens/create_file.dart';
 import 'package:authpass/ui/screens/select_file_screen.dart';
 import 'package:authpass/ui/widgets/link_button.dart';
 import 'package:authpass/utils/constants.dart';
-import 'package:authpass/utils/dialog_utils.dart';
-import 'package:authpass/utils/extension_methods.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_async_utils/flutter_async_utils.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -73,18 +69,6 @@ class _CloudStorageSelectorState extends State<CloudStorageSelector> {
         actions: widget.provider.isAuthenticated != true
             ? null
             : <Widget>[
-                if (widget.provider is AuthPassCloudProvider) ...[
-                  IconButton(
-                    tooltip: loc.authPassCloudOpenWithShareCodeTooltip,
-                    icon: const Icon(Icons.qr_code),
-                    onPressed: () {
-                      ShareCodeInputDialog.show(
-                        context,
-                        provider: widget.provider as AuthPassCloudProvider,
-                      );
-                    },
-                  ),
-                ],
                 if (widget.browserConfig is CloudStorageOpenConfig) ...[
                   IconButton(
                     tooltip: loc.createNewFile,
@@ -255,12 +239,10 @@ class SearchResultListView extends StatelessWidget {
     super.key,
     required this.response,
     required this.onTap,
-    this.provider,
   });
 
   final SearchResponse response;
   final void Function(CloudStorageEntity entity) onTap;
-  final AuthPassCloudProvider? provider;
 
   @override
   Widget build(BuildContext context) {
@@ -279,51 +261,11 @@ class SearchResultListView extends StatelessWidget {
                 : FontAwesomeIcons.folder,
           ),
           title: Text(entity.name!),
-          trailing: _createMenu(loc, entity),
           subtitle: entity.path == null ? null : Text(entity.path!),
           onTap: () => onTap(entity),
         );
       },
       itemCount: length + 1,
-    );
-  }
-
-  Widget? _createMenu(AppLocalizations loc, CloudStorageEntity entity) {
-    if (entity.type != CloudStorageEntityType.file) {
-      return null;
-    }
-    final provider = this.provider;
-    if (provider == null) {
-      return null;
-    }
-    return PopupMenuButton<VoidCallback>(
-      onSelected: (val) => val(),
-      itemBuilder: (context) {
-        return [
-          PopupMenuItem(
-            value: () async {
-              await Navigator.of(context).push(
-                ShareFileScreen.route(provider: provider, entity: entity),
-              );
-            },
-            child: ListTile(
-              leading: const Icon(Icons.share),
-              title: Text(loc.authPassCloudShareFileActionLabel),
-            ),
-          ),
-          PopupMenuItem(
-            value: () async {
-              await provider.delete(entity);
-              // ignore: use_build_context_synchronously
-              context.showSnackBar(loc.successfullyDeletedFileCloudStorage);
-            },
-            child: ListTile(
-              leading: const Icon(Icons.delete_forever),
-              title: Text(loc.deleteAction),
-            ),
-          ),
-        ];
-      },
     );
   }
 }
@@ -447,7 +389,6 @@ class _CloudStorageBrowserState extends State<CloudStorageBrowser>
             child: task == null && response != null
                 ? SearchResultListView(
                     response: response,
-                    provider: widget.provider.takeAs(),
                     onTap: (item) {
                       _logger.fine('Tapped on $item');
                       if (item.type == CloudStorageEntityType.directory) {

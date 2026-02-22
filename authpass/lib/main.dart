@@ -1,20 +1,14 @@
 import 'dart:async';
 
-import 'package:another_flushbar/flushbar_helper.dart';
-import 'package:another_flushbar/flushbar_route.dart' as flushbar_route;
 import 'package:authpass/bloc/analytics.dart';
 import 'package:authpass/bloc/app_data.dart';
-import 'package:authpass/bloc/authpass_cloud_bloc.dart';
 import 'package:authpass/bloc/deps.dart';
 import 'package:authpass/bloc/kdbx/file_content.dart';
 import 'package:authpass/bloc/kdbx/file_source.dart';
 import 'package:authpass/bloc/kdbx/file_source_local.dart';
 import 'package:authpass/bloc/kdbx_bloc.dart';
-import 'package:authpass/cloud_storage/authpasscloud/authpass_cloud_provider.dart';
 import 'package:authpass/cloud_storage/cloud_storage_bloc.dart';
-import 'package:authpass/cloud_storage/cloud_storage_ui_authpass_cloud.dart';
 import 'package:authpass/env/_base.dart';
-import 'package:authpass/env/fdroid.dart';
 import 'package:authpass/l10n-generated/app_localizations.dart';
 import 'package:authpass/theme.dart';
 import 'package:authpass/ui/common_fields.dart';
@@ -23,7 +17,6 @@ import 'package:authpass/ui/screens/select_file_screen.dart';
 import 'package:authpass/ui/widgets/platform_menu_bar.dart';
 import 'package:authpass/utils/cache_manager.dart';
 import 'package:authpass/utils/constants.dart';
-import 'package:authpass/utils/diac_utils.dart';
 import 'package:authpass/utils/dialog_utils.dart';
 import 'package:authpass/utils/extension_methods.dart';
 import 'package:authpass/utils/file_picker_writable_noop.dart';
@@ -33,14 +26,11 @@ import 'package:authpass/utils/path_utils.dart';
 import 'package:authpass/utils/platform.dart';
 import 'package:authpass/utils/winsparkle_init_noop.dart'
     if (dart.library.io) 'package:authpass/utils/winsparkle_init.dart';
-import 'package:collection/collection.dart';
-import 'package:diac_client/diac_client.dart';
 import 'package:file/local.dart';
 import 'package:file_picker_writable/file_picker_writable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_async_utils/flutter_async_utils.dart';
-import 'package:flutter_store_listing/flutter_store_listing.dart';
 import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 import 'package:kdbx/kdbx.dart';
 import 'package:logging/logging.dart';
@@ -48,7 +38,6 @@ import 'package:logging_appenders/logging_appenders.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:simple_json_persistence/simple_json_persistence.dart';
-import 'package:string_literal_finder_annotations/string_literal_finder_annotations.dart';
 
 final _logger = Logger('main');
 
@@ -325,10 +314,6 @@ class _AuthPassAppState extends State<AuthPassApp> with StreamSubscriberMixin {
     );
     return MultiProvider(
       providers: [
-        Provider<DiacBloc>(
-          create: (context) => _createDiacBloc(),
-          dispose: (context, diac) => diac.dispose(),
-        ),
         Provider<FilePickerState>.value(value: _filePickerState),
         Provider<Env>.value(value: _deps.env),
         Provider<Deps>.value(value: _deps),
@@ -354,34 +339,6 @@ class _AuthPassAppState extends State<AuthPassApp> with StreamSubscriberMixin {
             }
             return env.featureFlags;
           },
-        ),
-        ListenableProxyProvider<FeatureFlags, AuthPassCloudBloc>(
-          create: (_) => AuthPassCloudBlocDummy(),
-          update: (_, featureFlags, previous) {
-            _logger.info('creating AuthPassCloudBloc.');
-            if (previous != null &&
-                previous is! AuthPassCloudBlocDummy &&
-                previous.featureFlags == featureFlags) {
-              return previous;
-            }
-            //            previous?.dispose();
-            final bloc = AuthPassCloudBloc(
-              env: _deps.env,
-              featureFlags: featureFlags,
-            );
-
-            _deps.cloudStorageBloc.availableCloudStorage
-                .whereType<AuthPassCloudProvider>()
-                .firstOrNull
-                ?.let((that) => that.authPassCloudBloc = bloc);
-            return bloc;
-          },
-          dispose: (_, prev) {
-            prev.dispose();
-          },
-          // eagerly create bloc so everything is loaded once we
-          // get into the context menu
-          lazy: false,
         ),
         StreamProvider<KdbxBloc>(
           create: (context) => _deps.kdbxBloc.openedFilesChanged
@@ -471,26 +428,19 @@ class _AuthPassAppState extends State<AuthPassApp> with StreamSubscriberMixin {
           }
           if (initialRoute.startsWith(AppConstants.routeOpenFile)) {
             final uri = Uri.parse(initialRoute);
-            final token =
-                uri.queryParameters[AppConstants.routeOpenFileParamToken];
-            if (token != null) {
-              return [
-                AuthPassCloudLoadFileLaunch.route(token: token),
-              ];
-            }
             final file =
                 uri.queryParameters[AppConstants.routeOpenFileParamFile];
             _logger.finer('uri: $uri /// file: $file');
-            return [
-              //              MaterialPageRoute<void>(
-              //                  builder: (context) => const SelectFileScreen()),
-              CredentialsScreen.route(
-                FileSourceLocal(
-                  (const LocalFileSystem().file(file)),
-                  uuid: AppDataBloc.createUuid(),
+            if (file != null) {
+              return [
+                CredentialsScreen.route(
+                  FileSourceLocal(
+                    (const LocalFileSystem().file(file)),
+                    uuid: AppDataBloc.createUuid(),
+                  ),
                 ),
-              ),
-            ];
+              ];
+            }
           }
           return [
             (widget.isFirstRun && widget.env.featureOnboarding
@@ -553,118 +503,6 @@ class _AuthPassAppState extends State<AuthPassApp> with StreamSubscriberMixin {
       visualDensity: visualDensity,
       //      textTheme: textTheme,
     );
-  }
-
-  DiacBloc _createDiacBloc() {
-    final disableOnlineMessages =
-        _deps.env.diacDefaultDisabled && _appData!.diacOptIn != true;
-    _logger.finest(
-      '_createDiacBloc: $disableOnlineMessages = '
-      '${_deps.env.diacDefaultDisabled} && ${_appData!.diacOptIn}',
-    );
-    return DiacBloc(
-        opts: DiacOpts(
-          endpointUrl: _deps.env.diacEndpoint,
-          disableConfigFetch: disableOnlineMessages,
-          // always reload after a new start.
-          refetchIntervalCold: Duration.zero,
-          initialConfig: !disableOnlineMessages || _deps.env.diacHidden
-              ? null
-              : DiacConfig(
-                  updatedAt: DateTime(2020, 5, 18),
-                  messages: nonNls([
-                    DiacMessage(
-                      uuid: 'e7373fa7-a793-4ed5-a2d1-d0a037ad778a',
-                      body:
-                          'Hello ${widget.env is FDroid ? 'F-Droid user' : 'there'}, thanks for using AuthPass! '
-                          'I would love to occasionally display relevant news, surveys, etc (like this one ;), '
-                          'no ads, spam, etc). You can disable it anytime.',
-                      key: 'ask-opt-in',
-                      expression: 'user.days > 0',
-                      actions: const [
-                        DiacMessageAction(
-                          key: 'yes',
-                          label: '👍️ Yes, Opt In',
-                          url: 'diac:diacOptIn',
-                        ),
-                        DiacMessageAction(
-                          key: 'no',
-                          label: 'No, Sorry',
-                          url: 'diac:diacNoOptIn',
-                        ),
-                      ],
-                    ),
-                  ]),
-                ),
-          packageInfo: () async =>
-              (await _deps.env.getAppInfo()).toDiacPackageInfo(),
-        ),
-        contextBuilder: () async => nonNls({
-          'env': <String, Object>{
-            'isDebug': _deps.env.isDebug,
-            'isGoogleStore':
-                (await _deps.env.getAppInfo()).packageName ==
-                    'design.codeux.authpass' &&
-                AuthPassPlatform.isAndroid,
-            'isIOS': AuthPassPlatform.isIOS,
-            'isAndroid': AuthPassPlatform.isAndroid,
-            'operatingSystem': AuthPassPlatform.operatingSystem,
-          },
-          'appData': {
-            'manualUserType': _appData?.manualUserType,
-          },
-        }),
-        // TODO: This should probably be translated. Although right now all
-        //       messages are english anyway..
-        customActions: nonNls({
-          'launchReview': (event) async {
-            _deps.analytics.trackGenericEvent('review', 'reviewLaunch');
-            return await FlutterStoreListing().launchStoreListing();
-          },
-          'requestReview': (event) async {
-            _deps.analytics.trackGenericEvent('review', 'reviewRequest');
-            return await FlutterStoreListing().launchRequestReview(
-              onlyNative: true,
-            );
-          },
-          'diacOptIn': (event) async {
-            final flushbar = FlushbarHelper.createSuccess(
-              message: 'Thanks! 🎉️',
-            );
-            final route = flushbar_route.showFlushbar<void>(
-              context: context,
-              flushbar: flushbar,
-            );
-            unawaited(widget.navigatorKey.currentState?.push<void>(route));
-            await _deps.appDataBloc.update(
-              (builder, data) => builder.diacOptIn = true,
-            );
-            return true;
-          },
-          'diacNoOptIn': (event) async {
-            final flushbar = FlushbarHelper.createInformation(
-              message:
-                  '😢️ Too bad, if you ever change your mind, '
-                  'check out the preferences 🙏️.',
-            );
-            final route = flushbar_route.showFlushbar<void>(
-              context: context,
-              flushbar: flushbar,
-            );
-            await widget.navigatorKey.currentState?.push<void>(route);
-            return true;
-          },
-        }),
-      )
-      ..events.listen((event) {
-        _deps.analytics.trackGenericEvent(
-          'diac',
-          event is DiacEventWithAction
-              ? '${event.type.toStringBare()}:${event.action?.key}'
-              : event.type.toStringBare(),
-          label: event.message.key,
-        );
-      });
   }
 }
 

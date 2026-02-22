@@ -27,9 +27,6 @@ dependencies:
 #      ref: 4158191244681ac259a7bb060ef0b8a98db502d2
   logging: ^1.2.0
   logging_appenders: ^1.3.0-dev.2
-  openapi_base: ^2.0.0
-  diac_client:
-    path: ../deps/diac/diac_client
 
   synchronized: ^3.0.0
   base32: ^2.1.1
@@ -201,8 +198,6 @@ dependencies:
 #  openapi_base: ^0.1.5+5
   flutter_cache_manager: ^3.3.1
   cached_network_image: ^3.3.1
-  authpass_cloud_shared:
-    path: ../deps/authpass-cloud/packages/authpass_cloud_shared
   # windows updater
   winsparkle_flutter:
     git:

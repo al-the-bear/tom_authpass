@@ -3,7 +3,6 @@ import 'dart:collection';
 
 import 'package:authpass/bloc/analytics.dart';
 import 'package:authpass/bloc/app_data.dart';
-import 'package:authpass/bloc/authpass_cloud_bloc.dart';
 import 'package:authpass/bloc/kdbx/file_source.dart';
 import 'package:authpass/bloc/kdbx/file_source_local.dart';
 import 'package:authpass/bloc/kdbx/file_source_ui.dart';
@@ -12,8 +11,6 @@ import 'package:authpass/env/_base.dart';
 import 'package:authpass/l10n-generated/app_localizations.dart';
 import 'package:authpass/ui/common_fields.dart';
 import 'package:authpass/ui/screens/app_bar_menu.dart';
-import 'package:authpass/ui/screens/cloud/cloud_auth.dart';
-import 'package:authpass/ui/screens/cloud/cloud_mailbox.dart';
 import 'package:authpass/ui/screens/entry_details.dart';
 import 'package:authpass/ui/screens/group_list.dart';
 import 'package:authpass/ui/screens/locked_screen.dart';
@@ -24,7 +21,6 @@ import 'package:authpass/ui/widgets/keyboard_handler.dart';
 import 'package:authpass/ui/widgets/primary_button.dart';
 import 'package:authpass/ui/widgets/savefile/save_file_diag_button.dart';
 import 'package:authpass/ui/widgets/shortcut/authpass_intents.dart';
-import 'package:authpass/utils/cache_manager.dart';
 import 'package:authpass/utils/constants.dart';
 import 'package:authpass/utils/dialog_utils.dart';
 import 'package:authpass/utils/extension_methods.dart';
@@ -33,11 +29,8 @@ import 'package:authpass/utils/platform.dart';
 import 'package:authpass/utils/predefined_icons.dart';
 import 'package:authpass/utils/theme_utils.dart';
 import 'package:autofill_service/autofill_service.dart';
-import 'package:badges/badges.dart' as badges;
 import 'package:built_collection/built_collection.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 // import 'package:collection/collection.dart' show IterableExtension;
-import 'package:diac_client/diac_client.dart';
 import 'package:flinq/flinq.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -782,82 +775,54 @@ class _PasswordListContentState extends State<PasswordListContent>
             });
           },
         ),
-        StreamBuilder<CloudStatus?>(
-          stream: context.watch<AuthPassCloudBloc>().cloudStatus,
-          initialData: null,
-          builder: (context, cloudStatusSnapshot) => badges.Badge(
-            badgeContent:
-                cloudStatusSnapshot.hasData &&
-                    cloudStatusSnapshot.data!.messagesUnread > 0
-                ? Text(
-                    cloudStatusSnapshot.data!.messagesUnread.toString(),
-                    style: const TextStyle(color: Colors.white),
-                  )
-                : null,
-            showBadge:
-                cloudStatusSnapshot.hasData &&
-                cloudStatusSnapshot.data!.messagesUnread > 0,
-            badgeStyle: badges.BadgeStyle(
-              badgeColor: Theme.of(context).primaryColorDark,
-            ),
-            position: badges.BadgePosition.topEnd(top: 0, end: 3),
-            child: PopupMenuButton<VoidCallback>(
-              key: const ValueKey('appBarOverflowMenu'),
-              onSelected: (item) {
-                item();
+        PopupMenuButton<VoidCallback>(
+          key: const ValueKey('appBarOverflowMenu'),
+          onSelected: (item) {
+            item();
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: () async {
+                await Navigator.of(context).push(
+                  GroupListFlat.route(
+                    {},
+                    groupListMode: GroupListMode.manage,
+                  ),
+                );
               },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: () async {
-                    await Navigator.of(context).push(
-                      GroupListFlat.route(
-                        {},
-                        groupListMode: GroupListMode.manage,
-                      ),
-                    );
-                    //                if (group != null) {
-                    //                  _createGroupFilter({group});
-                    //                }
-                  },
-                  child: ListTile(
-                    leading: const Icon(Icons.category),
-                    title: Text(loc.manageGroups),
-                  ),
-                ),
-                ...?_buildAuthPassCloudMenuItems(
-                  context,
-                  cloudStatusSnapshot.data,
-                ),
-                ...AppBarMenu.createDefaultPopupMenuItems(
-                  context,
-                  kdbxBloc.openedFiles,
-                ),
-                PopupMenuItem(
-                  value: () {
-                    Provider.of<Analytics>(
-                      context,
-                      listen: false,
-                    ).events.trackActionPressed(action: 'lockFiles');
-                    Provider.of<KdbxBloc>(
-                      context,
-                      listen: false,
-                    ).closeAllFiles(clearQuickUnlock: false);
-                    Navigator.of(
-                      context,
-                      rootNavigator: true,
-                    ).pushAndRemoveUntil(
-                      LockedScreen.route(),
-                      (_) => false,
-                    );
-                  },
-                  child: ListTile(
-                    leading: const Icon(Icons.exit_to_app),
-                    title: Text(loc.lockFiles),
-                  ),
-                ),
-              ],
+              child: ListTile(
+                leading: const Icon(Icons.category),
+                title: Text(loc.manageGroups),
+              ),
             ),
-          ),
+            ...AppBarMenu.createDefaultPopupMenuItems(
+              context,
+              kdbxBloc.openedFiles,
+            ),
+            PopupMenuItem(
+              value: () {
+                Provider.of<Analytics>(
+                  context,
+                  listen: false,
+                ).events.trackActionPressed(action: 'lockFiles');
+                Provider.of<KdbxBloc>(
+                  context,
+                  listen: false,
+                ).closeAllFiles(clearQuickUnlock: false);
+                Navigator.of(
+                  context,
+                  rootNavigator: true,
+                ).pushAndRemoveUntil(
+                  LockedScreen.route(),
+                  (_) => false,
+                );
+              },
+              child: ListTile(
+                leading: const Icon(Icons.exit_to_app),
+                title: Text(loc.lockFiles),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -1149,13 +1114,6 @@ class _PasswordListContentState extends State<PasswordListContent>
       ...?_buildAutofillListPrefix(),
       ...?_buildListPrefix(),
     ];
-    if (listPrefix.isEmpty) {
-      listPrefix.add(
-        DiacMaterialBanner(
-          diac: Provider.of<DiacBloc>(context),
-        ),
-      );
-    }
 
     final theme = Theme.of(context);
     final kdbxBloc = Provider.of<KdbxBloc>(context);
@@ -1315,65 +1273,6 @@ class _PasswordListContentState extends State<PasswordListContent>
     );
     _filteredEntries = null;
     _filterTextEditingController.text = CharConstants.empty;
-  }
-
-  List<PopupMenuItem<VoidCallback>>? _buildAuthPassCloudMenuItems(
-    BuildContext context,
-    CloudStatus? cloudStatus,
-  ) {
-    final bloc = context.read<AuthPassCloudBloc>();
-    if (bloc.featureFlags.authpassCloud != true) {
-      return null;
-    }
-    final loc = AppLocalizations.of(context);
-    if (bloc.tokenStatus == TokenStatus.confirmed) {
-      return [
-        PopupMenuItem(
-          value: () {
-            Navigator.of(
-              context,
-              rootNavigator: true,
-            ).push(CloudMailboxTabScreen.route());
-          },
-          child: ListTile(
-            leading: badges.Badge(
-              badgeContent:
-                  cloudStatus != null && cloudStatus.messagesUnread > 0
-                  ? Text(
-                      cloudStatus.messagesUnread.toString(),
-                      style: TextStyle(
-                        color: Theme.of(
-                          context,
-                        ).primaryTextTheme.bodyLarge!.color,
-                      ),
-                    )
-                  : null,
-              showBadge: cloudStatus != null && cloudStatus.messagesUnread > 0,
-              badgeStyle: badges.BadgeStyle(
-                badgeColor: Theme.of(context).primaryColor,
-              ),
-              child: const Icon(Icons.cloud),
-            ),
-            title: Text(loc.menuItemAuthPassCloudMailboxes),
-          ),
-        ),
-      ];
-    } else {
-      return [
-        PopupMenuItem(
-          value: () {
-            Navigator.of(
-              context,
-              rootNavigator: true,
-            ).push(AuthPassCloudAuthScreen.route());
-          },
-          child: ListTile(
-            leading: const Icon(Icons.cloud),
-            title: Text(loc.menuItemAuthPassCloudAuthenticate),
-          ),
-        ),
-      ];
-    }
   }
 }
 
@@ -1837,19 +1736,9 @@ class EntryIcon extends StatelessWidget {
       return fallback(context);
     }
 
-    final authPassCloudBloc = context.watch<AuthPassCloudBloc>();
-
-    return CachedNetworkImage(
-      cacheManager: context.watch<AuthPassCacheManager>(),
-      width: size,
-      height: size,
-      imageUrl: authPassCloudBloc.imageBaseUrl
-          .replace(queryParameters: <String, String>{nonNls('url'): url})
-          .toString(),
-      errorWidget: (context, _, dynamic _) {
-        return fallback(context);
-      },
-    );
+    // Website icon fetching requires AuthPass Cloud which has been removed
+    // Returning fallback icon instead
+    return fallback(context);
   }
 
   static Widget defaultIcon(

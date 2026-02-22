@@ -1,6 +1,5 @@
 // ignore_for_file: implementation_imports
 
-import 'package:authpass/bloc/authpass_cloud_bloc.dart';
 import 'package:authpass/env/_base.dart';
 import 'package:authpass/utils/path_utils.dart';
 import 'package:authpass/utils/platform.dart';
@@ -8,6 +7,11 @@ import 'package:clock/clock.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:http/http.dart' as http;
 import 'package:string_literal_finder_annotations/string_literal_finder_annotations.dart';
+
+/// Generates a user agent string for HTTP requests.
+String _getUserAgent(AppInfo appInfo) {
+  return '${appInfo.appName}/${appInfo.version}+${appInfo.buildNumber}'; // NON-NLS
+}
 
 class AuthPassCacheManager extends CacheManager {
   factory AuthPassCacheManager({
@@ -25,7 +29,7 @@ class AuthPassCacheManager extends CacheManager {
       fileService: HttpFileService(
         httpClient: LazyUserAgentClient(
           (() async =>
-              AuthPassCloudBloc.getUserAgent(await env.getAppInfo()))(),
+              _getUserAgent(await env.getAppInfo()))(),
           http.Client(),
         ),
       ),

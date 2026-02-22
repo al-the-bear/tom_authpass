@@ -1,5 +1,4 @@
 import 'package:authpass/bloc/analytics.dart';
-import 'package:authpass/cloud_storage/authpasscloud/authpass_cloud_provider.dart';
 import 'package:authpass/cloud_storage/cloud_storage_helper.dart';
 import 'package:authpass/cloud_storage/cloud_storage_provider.dart';
 import 'package:authpass/cloud_storage/dropbox/dropbox_provider.dart';
@@ -16,7 +15,6 @@ class CloudStorageBloc {
   CloudStorageBloc(this.env, PathUtil pathUtil, Analytics analytics)
     : _helper = CloudStorageHelper(env, pathUtil, analytics),
       availableCloudStorage = {} {
-    availableCloudStorage.add(AuthPassCloudProvider(helper: _helper));
     if (env.featureCloudStorageProprietary) {
       availableCloudStorage.addAll(
         {

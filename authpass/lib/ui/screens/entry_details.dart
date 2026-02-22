@@ -7,7 +7,6 @@ import 'dart:ui' as ui;
 
 import 'package:authpass/bloc/analytics.dart';
 import 'package:authpass/bloc/app_data.dart';
-import 'package:authpass/bloc/authpass_cloud_bloc.dart';
 import 'package:authpass/bloc/kdbx/storage_exception.dart';
 import 'package:authpass/bloc/kdbx_bloc.dart';
 import 'package:authpass/env/_base.dart';
@@ -15,7 +14,6 @@ import 'package:authpass/l10n-generated/app_localizations.dart';
 import 'package:authpass/ui/common_fields.dart';
 import 'package:authpass/ui/screens/app_bar_menu.dart';
 import 'package:authpass/ui/screens/barcodescan_screen.dart';
-import 'package:authpass/ui/screens/cloud/cloud_auth.dart';
 import 'package:authpass/ui/screens/entry_totp.dart';
 import 'package:authpass/ui/screens/group_list.dart';
 import 'package:authpass/ui/screens/hud.dart';
@@ -577,7 +575,6 @@ class _EntryDetailsState extends State<EntryDetails>
   @override
   Widget build(BuildContext context) {
     final commonFields = Provider.of<CommonFields>(context);
-    final kdbxBloc = context.watch<KdbxBloc>();
     final vm = widget.entry;
     final entry = widget.entry.entry;
     final formatUtils = Provider.of<FormatUtils>(context);
@@ -699,7 +696,6 @@ class _EntryDetailsState extends State<EntryDetails>
               ),
               const Divider(),
               ...entry.binaryEntries.map((e) {
-                final info = kdbxBloc.attachmentInfo(e.value);
                 return InkWell(
                   onTap: () async {
                     await showModalBottomSheet<void>(
@@ -718,9 +714,7 @@ class _EntryDetailsState extends State<EntryDetails>
                     ),
                     child: Row(
                       children: <Widget>[
-                        info == null
-                            ? const Icon(Icons.attach_file)
-                            : const Icon(Icons.cloud),
+                        const Icon(Icons.attach_file),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Column(
@@ -732,17 +726,10 @@ class _EntryDetailsState extends State<EntryDetails>
                                 style: theme.textTheme.titleMedium,
                               ),
                               const SizedBox(height: 2),
-                              info == null
-                                  ? Text(
-                                      loc.sizeBytes(e.value.value.length),
-                                      style: theme.textTheme.bodySmall,
-                                    )
-                                  : Text(
-                                      loc.sizeBytesStoredAuthPassCloud(
-                                        info.size,
-                                      ),
-                                      style: theme.textTheme.bodySmall,
-                                    ),
+                              Text(
+                                loc.sizeBytes(e.value.value.length),
+                                style: theme.textTheme.bodySmall,
+                              ),
                             ],
                           ),
                         ),
@@ -829,8 +816,7 @@ class _EntryDetailsState extends State<EntryDetails>
       widget.entry.entry.file,
     );
 
-    if (attachmentProvider is! AttachmentProviderAuthPassCloud &&
-        bytes.lengthInBytes > 10 * 1024) {
+    if (bytes.lengthInBytes > 10 * 1024) {
       if (!await DialogUtils.showConfirmDialog(
         context: context,
         params: ConfirmDialogParams(
@@ -1241,7 +1227,6 @@ enum EntryAction {
   delete,
   show,
   passwordGenerator,
-  generateEmail,
 }
 
 abstract class FieldDelegate {
@@ -1465,25 +1450,6 @@ class _EntryFieldState extends State<EntryField>
           );
         });
         break;
-      case EntryAction.generateEmail:
-        context.events.trackEntryAction(EntryActionType.generateEmail);
-        final bloc = context.read<AuthPassCloudBloc>();
-        if (bloc.tokenStatus != TokenStatus.confirmed) {
-          await Navigator.of(context).push(AuthPassCloudAuthScreen.route());
-        } else {
-          await asyncRunTask(() async {
-            final address = await bloc.createMailbox(
-              entryUuid: widget.entry.uuid.uuid,
-            );
-            setState(() {
-              _isValueObscured = false;
-              _controller.text = address!;
-              _fieldValue = PlainValue(_controller.text);
-              copyValue();
-            });
-          });
-        }
-        break;
     }
   }
 
@@ -1513,7 +1479,6 @@ class _EntryFieldState extends State<EntryField>
           //            subtitle: null,
         ),
       ),
-      ...?_buildMenuEntriesAuthPassCloud(context),
       PopupMenuItem(
         value: EntryAction.protect,
         child: ListTile(
@@ -1693,29 +1658,6 @@ class _EntryFieldState extends State<EntryField>
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
-  }
-
-  List<PopupMenuEntry<EntryAction>>? _buildMenuEntriesAuthPassCloud(
-    BuildContext context,
-  ) {
-    final authPassCloud = context.read<AuthPassCloudBloc>();
-    if (authPassCloud.featureFlags.authpassCloud != true) {
-      return null;
-    }
-    if (authPassCloud.tokenStatus != TokenStatus.confirmed) {
-      return null;
-    }
-    final loc = AppLocalizations.of(context);
-    return [
-      PopupMenuItem(
-        value: EntryAction.generateEmail,
-        child: ListTile(
-          leading: const Icon(Icons.cloud),
-          title: Text(loc.fieldGenerateEmail),
-          subtitle: const Text(Env.AuthPassCloud),
-        ),
-      ),
-    ];
   }
 }
 

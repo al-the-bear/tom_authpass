@@ -114,13 +114,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.2"
-  authpass_cloud_shared:
-    dependency: "direct main"
-    description:
-      path: "../deps/authpass-cloud/packages/authpass_cloud_shared"
-      relative: true
-    source: path
-    version: "0.0.0"
   autofill_service:
     dependency: "direct main"
     description:
@@ -296,14 +289,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.13.0"
-  chunked_stream:
-    dependency: transitive
-    description:
-      name: chunked_stream
-      sha256: b2fde5f81d780f0c1699b8347cae2e413412ae947fc6e64727cc48c6bb54c95c
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.4.2"
   cli_config:
     dependency: transitive
     description:
@@ -328,14 +313,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.2"
-  codable_forked:
-    dependency: transitive
-    description:
-      name: codable_forked
-      sha256: "902e6f90fa4d97be2d02931d0a6e555e83252fd2f8b632e26a6385c50964e473"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0+3"
   code_assets:
     dependency: transitive
     description:
@@ -448,13 +425,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.3"
-  diac_client:
-    dependency: "direct main"
-    description:
-      path: "../deps/diac/diac_client"
-      relative: true
-    source: path
-    version: "0.1.1"
   dio:
     dependency: transitive
     description:
@@ -503,14 +473,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.1"
-  expressions:
-    dependency: transitive
-    description:
-      name: expressions
-      sha256: f3b0e99563a9a1bde1138e728eb722f292cc7d2aec55d28136c49b1a370306c5
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.5+3"
   extension_google_sign_in_as_googleapis_auth:
     dependency: "direct main"
     description:
@@ -1316,14 +1278,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
-  open_api_forked:
-    dependency: transitive
-    description:
-      name: open_api_forked
-      sha256: e815a0adbb290b6b460c48808de2b393f95522b1016cdb5d54cc8098cc8d5d2f
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0+6"
   open_file:
     dependency: "direct main"
     description:
@@ -1388,14 +1342,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.0.3"
-  openapi_base:
-    dependency: "direct main"
-    description:
-      name: openapi_base
-      sha256: a9f7ef85da91fa68092000bc3d3f96a979ac5ce8b8650d3c8292f67e02cbede2
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.0"
   otp:
     dependency: "direct main"
     description:
@@ -2019,14 +1965,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.3"
-  uri:
-    dependency: transitive
-    description:
-      name: uri
-      sha256: "889eea21e953187c6099802b7b4cf5219ba8f3518f604a1033064d45b1b8268a"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0"
   url_launcher:
     dependency: "direct main"
     description:

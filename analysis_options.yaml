@@ -1,0 +1,4 @@
+# Exclude this third-party package from analysis entirely
+analyzer:
+  exclude:
+    - "**"

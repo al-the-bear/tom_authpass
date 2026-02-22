@@ -14,7 +14,6 @@ import 'package:authpass/bloc/kdbx/file_source_web_none.dart'
 import 'package:authpass/bloc/kdbx/storage_exception.dart';
 import 'package:authpass/bloc/kdbx_argon2_ffi.dart'
     if (dart.library.js_interop) 'package:authpass/bloc/kdbx_argon2_web.dart';
-import 'package:authpass/cloud_storage/authpasscloud/authpass_cloud_provider.dart';
 import 'package:authpass/cloud_storage/cloud_storage_bloc.dart';
 import 'package:authpass/cloud_storage/cloud_storage_provider.dart';
 import 'package:authpass/env/_base.dart';
@@ -369,16 +368,7 @@ class KdbxBloc {
       addToQuickUnlock = false;
 
       if (file is FileSourceCloudStorage) {
-        final provider = file.provider;
-        if (provider is AuthPassCloudProvider) {
-          unawaited(
-            (() async {
-              await Future<void>.delayed(const Duration(seconds: 2));
-              _logger.fine('touch files.');
-              await provider.openedFile(this, openedFile);
-            })(),
-          );
-        }
+        // Cloud storage file opened
       }
 
       yield OpenFileResult(
@@ -980,34 +970,13 @@ class KdbxBloc {
     if (fs is! FileSourceCloudStorage) {
       return AttachmentProviderLocal();
     }
-    final provider = fs.provider;
-    if (provider is! AuthPassCloudProvider) {
-      return AttachmentProviderLocal();
-    }
-    return AttachmentProviderAuthPassCloud(
-      kdbxBloc: this,
-      fs: fs,
-      provider: provider,
-    );
+    // Always use local attachment provider
+    return AttachmentProviderLocal();
   }
 
-  AuthPassExternalAttachment? attachmentInfo(KdbxBinary binary) {
-    if (!attachmentIsFromCloud(binary)) {
-      return null;
-    }
-    final data = binary.value.sublist(
-      AuthPassExternalAttachment.prefixIdentifierBytes.length,
-    );
-    final infoJson = json.decode(utf8.decode(data)) as Map<String, dynamic>;
-    return AuthPassExternalAttachment.fromJson(infoJson);
-  }
-
+  /// Checks if attachment is stored in cloud (no longer supported)
   bool attachmentIsFromCloud(KdbxBinary binary) {
-    final cloudId = AuthPassExternalAttachment.prefixIdentifierBytes;
-    if (binary.value.length < cloudId.length) {
-      return false;
-    }
-    return ByteUtils.eq(binary.value.sublist(0, cloudId.length), cloudId);
+    return false;
   }
 }
 
@@ -1040,80 +1009,6 @@ class AttachmentProviderLocal extends AttachmentProvider {
       name: fileName,
       bytes: bytes,
     );
-  }
-}
-
-class AttachmentProviderAuthPassCloud extends AttachmentProvider {
-  AttachmentProviderAuthPassCloud({
-    required this.kdbxBloc,
-    required this.provider,
-    required this.fs,
-  });
-
-  final KdbxBloc kdbxBloc;
-  final AuthPassCloudProvider provider;
-  final FileSourceCloudStorage fs;
-
-  @override
-  Future<void> attachFile({
-    required KdbxEntry entry,
-    required String fileName,
-    required Uint8List bytes,
-  }) async {
-    final attached = await attachFileToCloud(
-      entry: entry,
-      fileName: fileName,
-      bytes: bytes,
-    );
-    if (attached) {
-      return;
-    }
-    entry.createBinary(
-      isProtected: false,
-      name: fileName,
-      bytes: bytes,
-    );
-  }
-
-  Future<bool> attachFileToCloud({
-    required KdbxEntry entry,
-    required String fileName,
-    required Uint8List bytes,
-  }) async {
-    _logger.info('Lets try AuthPass Cloud Attachments.');
-    try {
-      final attachmentInfo = await provider.createAttachment(
-        fileSource: fs,
-        name: fileName,
-        bytes: bytes,
-      );
-      final info = [
-        attachmentInfo.identifier,
-        json.encode(attachmentInfo.toJson()),
-      ].join();
-      entry.createBinary(
-        isProtected: false,
-        name: fileName,
-        bytes: utf8.encode(info),
-      );
-      return true;
-    } catch (e, stackTrace) {
-      _logger.severe('Error while uploading attachment.', e, stackTrace);
-      rethrow;
-    }
-  }
-
-  @override
-  Future<Uint8List> readAttachmentBytes(
-    KdbxFile file,
-    KdbxBinary binary,
-  ) async {
-    final info = kdbxBloc.attachmentInfo(binary);
-    if (info == null) {
-      return binary.value;
-    }
-
-    return await provider.loadAttachment(info);
   }
 }
 

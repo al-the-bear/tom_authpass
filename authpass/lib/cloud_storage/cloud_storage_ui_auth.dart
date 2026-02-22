@@ -1,9 +1,6 @@
-import 'package:authpass/cloud_storage/authpasscloud/authpass_cloud_provider.dart';
 import 'package:authpass/cloud_storage/cloud_storage_provider.dart';
 import 'package:authpass/cloud_storage/cloud_storage_ui_adapt.dart';
-import 'package:authpass/cloud_storage/cloud_storage_ui_authpass_cloud.dart';
 import 'package:authpass/l10n-generated/app_localizations.dart';
-import 'package:authpass/ui/screens/cloud/cloud_auth.dart';
 import 'package:authpass/ui/widgets/link_button.dart';
 import 'package:authpass/ui/widgets/primary_button.dart';
 import 'package:authpass/utils/dialog_utils.dart';
@@ -56,33 +53,16 @@ class CloudStorageAuthentication extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          if (provider is AuthPassCloudProvider) ...[
-            const SizedBox(height: 16),
-            Text(
-              loc.shareCodeOpen,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+          const SizedBox(height: 16),
+          LinkButton(
+            onPressed: () async {
+              await _startLoginFlow(context, forceNoOpenUrl: true);
+            },
+            child: Text(
+              loc.cloudStorageLogInCode,
+              textScaler: const TextScaler.linear(0.75),
             ),
-            TextButton.icon(
-              onPressed: () {
-                ShareCodeInputDialog.show(
-                  context,
-                  provider: provider,
-                );
-              },
-              icon: const Icon(Icons.qr_code_scanner),
-              label: Text(loc.authPassCloudOpenWithShareCodeTooltip),
-            ),
-          ] else ...[
-            LinkButton(
-              onPressed: () async {
-                await _startLoginFlow(context, forceNoOpenUrl: true);
-              },
-              child: Text(
-                loc.cloudStorageLogInCode,
-                textScaler: const TextScaler.linear(0.75),
-              ),
-            ),
-          ],
+          ),
         ],
       ),
     );
@@ -135,16 +115,6 @@ class CloudStorageAuthentication extends StatelessWidget {
             >) {
           final result = await UrlUsernamePasswordDialog().show(context);
           prompt.result(result);
-        } else if (prompt
-            is UserAuthenticationPrompt<
-              DummyUserAuthenticationPromptResult,
-              AuthPassCloudAuthPromptData
-            >) {
-          final result = await Navigator.of(
-            context,
-            rootNavigator: true,
-          ).push(AuthPassCloudAuthScreen.route());
-          prompt.result(DummyUserAuthenticationPromptResult(result ?? false));
         } else {
           throw StateError('Unsupported prompt: $prompt');
         }

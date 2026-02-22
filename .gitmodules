@@ -1,24 +1,18 @@
 [submodule "deps/kdbx.dart"]
 	path = deps/kdbx.dart
-	url = ../../authpass/kdbx.dart
-[submodule "deps/analytics_events"]
-	path = deps/analytics_events
-	url = ../../hpoul/analytics_events
+	url = ../../al-the-bear/tom_kdbx.dart
 [submodule "deps/biometric_storage"]
 	path = deps/biometric_storage
-	url = ../../authpass/biometric_storage.git
+	url = ../../al-the-bear/tom_biometric_storage
 [submodule "deps/autofill_service"]
 	path = deps/autofill_service
-	url = ../../authpass/autofill_service.git
-[submodule "deps/package_info_macos"]
-	path = deps/package_info_macos
-	url = ../../authpass/package_info_macos
-[submodule "deps/diac"]
-	path = deps/diac
-	url = ../../hpoul/diac
-[submodule "deps/authpass-cloud"]
-	path = deps/authpass-cloud
-	url = ../../authpass/authpass-cloud
-[submodule "deps/clipboard_plugintest"]
-	path = deps/clipboard_plugintest
-	url = ../../authpass/clipboard_plugintest
+	url = ../../al-the-bear/tom_autofill_service
+[submodule "deps/mailer"]
+	path = deps/mailer
+	url = https://github.com/al-the-bear/tom_mailer.git
+[submodule "deps/postgres_utils.dart"]
+	path = deps/postgres_utils.dart
+	url = https://github.com/al-the-bear/tom_postgres_utils.dart.git
+[submodule "deps/smtpd.dart"]
+	path = deps/smtpd.dart
+	url = https://github.com/al-the-bear/tom_smtpd.dart.git

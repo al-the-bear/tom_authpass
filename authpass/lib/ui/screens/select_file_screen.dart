@@ -12,7 +12,6 @@ import 'package:authpass/bloc/kdbx/file_source.dart';
 import 'package:authpass/bloc/kdbx/file_source_local.dart';
 import 'package:authpass/bloc/kdbx/file_source_ui.dart';
 import 'package:authpass/bloc/kdbx_bloc.dart';
-import 'package:authpass/cloud_storage/authpasscloud/authpass_cloud_provider.dart';
 import 'package:authpass/cloud_storage/cloud_storage_bloc.dart';
 import 'package:authpass/cloud_storage/cloud_storage_provider.dart';
 import 'package:authpass/cloud_storage/cloud_storage_ui.dart';
@@ -381,17 +380,6 @@ class _SelectFileWidgetState extends State<SelectFileWidget>
                 spacing: 16,
                 runSpacing: 16,
                 children: <Widget>[
-                  ...cloudStorageBloc.availableCloudStorage
-                      .whereType<AuthPassCloudProvider>()
-                      .map(
-                        (cs) => SelectFileAction(
-                          icon: cs.displayIcon.iconData,
-                          label: cs.displayName,
-                          onPressed: () async {
-                            await _loadFromCloudStorage(context, cs);
-                          },
-                        ),
-                      ),
                   SelectFileActionChrome(
                     child: PopupMenuButton(
                       tooltip: null,
